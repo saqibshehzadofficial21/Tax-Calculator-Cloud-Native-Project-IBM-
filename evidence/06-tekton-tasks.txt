@@ -1,0 +1,42 @@
+==============================================================
+  EVIDENCE: Tekton Tasks
+==============================================================
+Project : Cloud-Native Tax Calculator
+Date    : 2026-11-03
+Status  : IMPLEMENTED — Pending cluster execution
+==============================================================
+
+TASKS CREATED:
+
+1. tekton/tasks/test.yaml
+   Name  : tax-calculator-test
+   Steps : install-dependencies → run-tests
+   Image : node:20-alpine
+   Input : workspace (source)
+   Params: node-image (default: node:20-alpine)
+   Test  : npm run test:ci (Jasmine, 7 specs)
+
+2. tekton/tasks/build-push.yaml
+   Name  : tax-calculator-build-push
+   Steps : build-and-push (Kaniko)
+   Image : gcr.io/kaniko-project/executor:v1.23.2
+   Input : workspace (source), workspace (dockerconfig, optional)
+   Params: IMAGE, TAG, DOCKERFILE, CONTEXT, KANIKO_IMAGE
+   Auth  : secret ibm-registry-auth mounted at /kaniko/.docker
+
+3. tekton/tasks/deploy.yaml
+   Name  : tax-calculator-deploy
+   Steps : apply-manifest → wait-for-rollout → verify-deployment
+   Image : bitnami/kubectl:1.31
+   Params: IMAGE, NAMESPACE, DEPLOYMENT_NAME, REPLICAS, ROLLOUT_TIMEOUT
+   Output: Deployment + Service applied, rollout verified
+
+==============================================================
+  APPLY COMMANDS (once cluster is available):
+  kubectl apply -f tekton/tasks/test.yaml
+  kubectl apply -f tekton/tasks/build-push.yaml
+  kubectl apply -f tekton/tasks/deploy.yaml
+  tkn task list
+==============================================================
+  STATUS: Files created and validated. Cluster execution PENDING.
+==============================================================

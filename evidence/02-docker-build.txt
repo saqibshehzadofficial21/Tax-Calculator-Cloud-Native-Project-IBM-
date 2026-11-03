@@ -1,0 +1,34 @@
+==============================================================
+  EVIDENCE: Docker Image Build
+==============================================================
+Project : Cloud-Native Tax Calculator
+Date    : 2026-11-03
+Command : docker build -t tax-calculator:latest .
+==============================================================
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 446B done
+#2 [internal] load metadata for docker.io/library/node:20-alpine
+#4 [internal] load .dockerignore
+#5 [1/6] FROM docker.io/library/node:20-alpine
+#7 [2/6] WORKDIR /app
+#8 [3/6] COPY package*.json ./
+#9 [4/6] RUN npm install --omit=dev && npm cache clean --force
+  added 68 packages, and audited 69 packages in 9s
+  found 0 vulnerabilities
+#10 [5/6] COPY src ./src
+#11 [6/6] COPY public ./public
+#12 exporting to image
+  naming to docker.io/library/tax-calculator:latest done
+  unpacking to docker.io/library/tax-calculator:latest done
+
+Build status: SUCCESS
+
+Image verification:
+  docker images tax-calculator
+  IMAGE                   ID             DISK USAGE   CONTENT SIZE
+  tax-calculator:latest   0403cbfa55d1        199MB         49.1MB
+
+==============================================================
+  Image tax-calculator:latest built successfully.
+==============================================================

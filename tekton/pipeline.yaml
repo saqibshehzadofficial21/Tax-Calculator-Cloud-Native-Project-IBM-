@@ -1,0 +1,123 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: tax-calculator-ci-cd
+  labels:
+    app.kubernetes.io/name: tax-calculator
+    app.kubernetes.io/component: ci-cd
+  annotations:
+    description: >
+      Full CI/CD pipeline for the Cloud-Native Tax Calculator.
+      Execution order: clone source → run tests → build & push image → deploy to Kubernetes.
+      Deployment is blocked if any earlier stage fails.
+spec:
+  description: >
+    Cloud-Native Tax Calculator CI/CD Pipeline.
+    Clones the source repository, runs Jasmine unit tests, builds and pushes
+    the Docker image to IBM Cloud Container Registry, and deploys to Kubernetes.
+
+  # ── Pipeline parameters ──────────────────────────────────────────────────
+  params:
+    - name: git-url
+      type: string
+      description: Git repository URL to clone.
+    - name: git-revision
+      type: string
+      default: main
+      description: Git branch, tag, or commit SHA to build.
+    - name: image
+      type: string
+      description: >
+        Target image repository path, e.g. us.icr.io/YOUR_NAMESPACE/tax-calculator
+    - name: tag
+      type: string
+      default: latest
+      description: Image tag to build and deploy (e.g. v1, latest, git-sha).
+    - name: deploy-namespace
+      type: string
+      default: default
+      description: Kubernetes namespace to deploy into.
+
+  # ── Workspaces ────────────────────────────────────────────────────────────
+  workspaces:
+    - name: source
+      description: >
+        Shared workspace for source code. Bound to a PVC so all tasks
+        read from the same clone.
+    - name: dockerconfig
+      description: >
+        Kubernetes Docker config secret (ibm-registry-auth) providing
+        credentials for IBM Cloud Container Registry.
+      optional: true
+
+  # ── Pipeline tasks ────────────────────────────────────────────────────────
+  tasks:
+    # ── Stage 1: Clone source ──────────────────────────────────────────────
+    - name: clone-source
+      taskRef:
+        resolver: hub
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: git-clone
+          - name: version
+            value: "0.9"
+      workspaces:
+        - name: output
+          workspace: source
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.git-revision)
+        - name: deleteExisting
+          value: "true"
+
+    # ── Stage 2: Run Jasmine tests ─────────────────────────────────────────
+    - name: test
+      runAfter: [clone-source]
+      taskRef:
+        name: tax-calculator-test
+      workspaces:
+        - name: source
+          workspace: source
+
+    # ── Stage 3: Build Docker image and push to IBM CR ─────────────────────
+    - name: build-push
+      runAfter: [test]
+      taskRef:
+        name: tax-calculator-build-push
+      params:
+        - name: IMAGE
+          value: $(params.image)
+        - name: TAG
+          value: $(params.tag)
+      workspaces:
+        - name: source
+          workspace: source
+        - name: dockerconfig
+          workspace: dockerconfig
+
+    # ── Stage 4: Deploy to Kubernetes ─────────────────────────────────────
+    - name: deploy
+      runAfter: [build-push]
+      taskRef:
+        name: tax-calculator-deploy
+      params:
+        - name: IMAGE
+          value: $(params.image):$(params.tag)
+        - name: NAMESPACE
+          value: $(params.deploy-namespace)
+
+  # ── Finally block (cleanup / notifications) ───────────────────────────────
+  # Uncomment and configure to add Slack/email notifications on completion.
+  # finally:
+  #   - name: notify-complete
+  #     taskRef:
+  #       name: send-to-webhook-slack
+  #     params:
+  #       - name: webhook-secret
+  #         value: slack-webhook
+  #       - name: message
+  #         value: "Pipeline $(context.pipeline.name) completed."

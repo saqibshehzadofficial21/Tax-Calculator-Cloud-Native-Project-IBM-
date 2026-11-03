@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: tax-calculator-source
+  labels:
+    app.kubernetes.io/name: tax-calculator
+    app.kubernetes.io/component: ci-cd
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  # Uncomment and set storageClassName if your cluster requires a specific class:
+  # storageClassName: ibmc-file-gold

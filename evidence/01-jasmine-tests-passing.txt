@@ -1,0 +1,31 @@
+==============================================================
+  EVIDENCE: Jasmine Unit Tests — 7 Specs, 0 Failures
+==============================================================
+Project : Cloud-Native Tax Calculator
+Date    : 2026-11-03
+Command : npx jasmine
+==============================================================
+
+> cloud-native-tax-calculator@1.0.0 test
+> jasmine
+
+Started
+.......
+
+7 specs, 0 failures
+Finished in 0.008 seconds
+
+==============================================================
+  All 7 specs passed with 0 failures.
+==============================================================
+
+Test cases covered:
+  1. returns zero tax for zero income
+  2. returns zero tax for income in the first illustrative bracket
+  3. calculates tax progressively across brackets
+  4. calculates monthly tax from annual tax
+  5. rejects negative income
+  6. rejects non-numeric income
+  7. calculates correct tax at the exact upper boundary of the top bracket
+
+File: spec/tax.spec.js

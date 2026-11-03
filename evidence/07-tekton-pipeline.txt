@@ -1,0 +1,53 @@
+==============================================================
+  EVIDENCE: Tekton Pipeline
+==============================================================
+Project : Cloud-Native Tax Calculator
+Date    : 2026-11-03
+Status  : IMPLEMENTED — Pending cluster execution
+==============================================================
+
+PIPELINE: tekton/pipeline.yaml
+  Name: tax-calculator-ci-cd
+
+  Parameters:
+    - git-url         : Git repository URL
+    - git-revision    : Branch / tag / SHA (default: main)
+    - image           : Target registry path
+    - tag             : Image tag (default: latest)
+    - deploy-namespace: Kubernetes namespace (default: default)
+
+  Workspaces:
+    - source      : Shared PVC for source code
+    - dockerconfig: IBM registry credentials (optional)
+
+  Execution Order:
+    clone-source (git-clone hub task)
+        ↓ runAfter: clone-source
+    test (tax-calculator-test)
+        ↓ runAfter: test
+    build-push (tax-calculator-build-push)
+        ↓ runAfter: build-push
+    deploy (tax-calculator-deploy)
+
+  Key features:
+    - Tests MUST pass before image is built
+    - Exact image tag from build-push is used in deploy
+    - Deployment fails fast if rollout does not complete in 180s
+
+SUPPORTING FILES:
+  tekton/pipelinerun.yaml          — PipelineRun template
+  tekton/config/workspace-pvc.yaml — Source PVC definition
+  tekton/config/rbac.yaml          — Service account and RBAC
+
+==============================================================
+  APPLY COMMANDS (once cluster is available):
+  kubectl apply -f tekton/config/workspace-pvc.yaml
+  kubectl apply -f tekton/config/rbac.yaml
+  kubectl apply -f tekton/tasks/test.yaml
+  kubectl apply -f tekton/tasks/build-push.yaml
+  kubectl apply -f tekton/tasks/deploy.yaml
+  kubectl apply -f tekton/pipeline.yaml
+  tkn pipeline list
+==============================================================
+  STATUS: File created and validated. Cluster execution PENDING.
+==============================================================

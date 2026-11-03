@@ -1,0 +1,67 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: tax-calculator-build-push
+  labels:
+    app.kubernetes.io/name: tax-calculator
+    app.kubernetes.io/component: ci
+  annotations:
+    description: >
+      Builds the Tax Calculator Docker image using Kaniko and pushes
+      it to IBM Cloud Container Registry. Registry authentication is
+      supplied via a Kubernetes Docker config secret.
+spec:
+  description: Build and push the Tax Calculator image to IBM Cloud Container Registry.
+  params:
+    - name: IMAGE
+      type: string
+      description: >
+        Fully qualified image repository path, e.g.
+        us.icr.io/YOUR_NAMESPACE/tax-calculator
+    - name: TAG
+      type: string
+      default: latest
+      description: Image tag to apply (e.g. v1, latest, git-sha).
+    - name: DOCKERFILE
+      type: string
+      default: ./Dockerfile
+      description: Path to the Dockerfile relative to the source workspace.
+    - name: CONTEXT
+      type: string
+      default: ./
+      description: Build context path relative to the source workspace.
+    - name: KANIKO_IMAGE
+      type: string
+      default: gcr.io/kaniko-project/executor:v1.23.2
+      description: Kaniko executor image version.
+  workspaces:
+    - name: source
+      description: Workspace containing the application source code and Dockerfile.
+    - name: dockerconfig
+      description: >
+        Optional workspace bound to a Kubernetes Docker config secret
+        (ibm-registry-auth) that provides registry credentials.
+      optional: true
+  steps:
+    - name: build-and-push
+      image: $(params.KANIKO_IMAGE)
+      workingDir: $(workspaces.source.path)
+      args:
+        - --context=$(workspaces.source.path)/$(params.CONTEXT)
+        - --dockerfile=$(workspaces.source.path)/$(params.DOCKERFILE)
+        - --destination=$(params.IMAGE):$(params.TAG)
+        - --cache=true
+        - --cache-ttl=24h
+        - --compressed-caching=false
+        - --snapshot-mode=redo
+      volumeMounts:
+        - name: docker-config
+          mountPath: /kaniko/.docker
+      env:
+        - name: DOCKER_CONFIG
+          value: /kaniko/.docker
+  volumes:
+    - name: docker-config
+      secret:
+        secretName: ibm-registry-auth
+        optional: true

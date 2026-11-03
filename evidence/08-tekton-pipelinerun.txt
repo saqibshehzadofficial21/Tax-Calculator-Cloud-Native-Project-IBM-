@@ -1,0 +1,69 @@
+==============================================================
+  EVIDENCE: Tekton PipelineRun
+==============================================================
+Project : Cloud-Native Tax Calculator
+Date    : 2026-11-03
+Status  : PENDING — Requires Tekton-enabled Kubernetes cluster
+==============================================================
+
+PIPELINERUN TEMPLATE: tekton/pipelinerun.yaml
+  generateName : tax-calculator-run-
+  Pipeline     : tax-calculator-ci-cd
+
+  Parameters to supply:
+    git-url          : https://github.com/YOUR_GITHUB_USERNAME/Tax-Calculator-Cloud-Native-Project
+    git-revision     : main
+    image            : us.icr.io/YOUR_NAMESPACE/tax-calculator
+    tag              : v1
+    deploy-namespace : default
+
+  Workspaces:
+    source      → PVC: tax-calculator-source
+    dockerconfig → Secret: ibm-registry-auth
+
+STEPS TO EXECUTE:
+
+1. Ensure all tasks and pipeline are applied (see evidence/07)
+
+2. Create the registry secret (do NOT commit the API key):
+   kubectl create secret docker-registry ibm-registry-auth \
+     --docker-server=us.icr.io \
+     --docker-username=iamapikey \
+     --docker-password="$IBM_CLOUD_API_KEY" \
+     --docker-email=unused@example.com
+
+3. Apply the source workspace PVC:
+   kubectl apply -f tekton/config/workspace-pvc.yaml
+
+4. Edit tekton/pipelinerun.yaml (replace YOUR_* placeholders)
+
+5. Submit PipelineRun:
+   kubectl apply -f tekton/pipelinerun.yaml
+
+6. Monitor execution:
+   tkn pipelinerun list
+   tkn pipelinerun logs --last -f
+
+7. Verify TaskRuns:
+   tkn taskrun list
+
+8. Verify deployment:
+   kubectl rollout status deployment/tax-calculator
+   kubectl get pods
+   kubectl get service tax-calculator
+
+==============================================================
+  EXPECTED SUCCESSFUL OUTPUT:
+  PipelineRun ... has successfully completed
+  NAME          STARTED   DURATION   STATUS
+  tax-calc-...  X ago     Y min      Succeeded
+
+  TaskRun results:
+  clone-source  → Succeeded
+  test          → Succeeded (7 specs, 0 failures)
+  build-push    → Succeeded (image pushed to us.icr.io/...)
+  deploy        → Succeeded (2 replicas ready)
+==============================================================
+  STATUS: Template prepared. Cluster execution PENDING — requires
+  IBM Cloud IKS cluster with Tekton Pipelines installed.
+==============================================================

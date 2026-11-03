@@ -1,0 +1,16 @@
+{
+  "name": "cloud-native-tax-calculator",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A containerised tax calculator with Jasmine tests and Tekton CI/CD assets",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js",
+    "test": "jasmine",
+    "test:ci": "jasmine --no-color"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": { "express": "^4.21.2" },
+  "devDependencies": { "jasmine": "^5.6.0" }
+}

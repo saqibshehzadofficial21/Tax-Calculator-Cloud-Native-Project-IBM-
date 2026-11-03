@@ -1,0 +1,35 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: tax-calculator-run-
+  labels:
+    app.kubernetes.io/name: tax-calculator
+    app.kubernetes.io/component: ci-cd
+  annotations:
+    description: >
+      Example PipelineRun for the Tax Calculator CI/CD pipeline.
+      Replace all YOUR_* placeholder values with your actual configuration
+      before applying.
+spec:
+  pipelineRef:
+    name: tax-calculator-ci-cd
+  params:
+    - name: git-url
+      value: https://github.com/YOUR_GITHUB_USERNAME/Tax-Calculator-Cloud-Native-Project
+    - name: git-revision
+      value: main
+    - name: image
+      value: us.icr.io/YOUR_NAMESPACE/tax-calculator
+    - name: tag
+      value: v1
+    - name: deploy-namespace
+      value: default
+  workspaces:
+    - name: source
+      persistentVolumeClaim:
+        claimName: tax-calculator-source
+    - name: dockerconfig
+      secret:
+        secretName: ibm-registry-auth
+  # Optional: specify a service account that has deployment permissions
+  # serviceAccountName: tekton-pipeline-sa

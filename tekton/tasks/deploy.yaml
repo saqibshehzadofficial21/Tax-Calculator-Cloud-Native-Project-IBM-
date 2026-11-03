@@ -1,0 +1,139 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: tax-calculator-deploy
+  labels:
+    app.kubernetes.io/name: tax-calculator
+    app.kubernetes.io/component: cd
+  annotations:
+    description: >
+      Deploys or updates the Tax Calculator application on Kubernetes.
+      The task patches the Deployment image, applies the full manifest,
+      waits for the rollout to complete, and fails if the rollout does
+      not succeed within the timeout.
+spec:
+  description: Deploy the Tax Calculator image to the Kubernetes cluster and verify rollout.
+  params:
+    - name: IMAGE
+      type: string
+      description: >
+        Fully qualified image reference including tag, e.g.
+        us.icr.io/YOUR_NAMESPACE/tax-calculator:v1
+    - name: NAMESPACE
+      type: string
+      default: default
+      description: Kubernetes namespace to deploy into.
+    - name: DEPLOYMENT_NAME
+      type: string
+      default: tax-calculator
+      description: Name of the Kubernetes Deployment resource.
+    - name: REPLICAS
+      type: string
+      default: "2"
+      description: Number of desired pod replicas.
+    - name: ROLLOUT_TIMEOUT
+      type: string
+      default: "180s"
+      description: Maximum time to wait for the deployment rollout.
+    - name: KUBECTL_IMAGE
+      type: string
+      default: bitnami/kubectl:1.31
+      description: kubectl container image version.
+  steps:
+    - name: apply-manifest
+      image: $(params.KUBECTL_IMAGE)
+      script: |
+        #!/bin/sh
+        set -eu
+        echo "==> Deploying image: $(params.IMAGE)"
+        echo "==> Target namespace: $(params.NAMESPACE)"
+
+        kubectl apply -n $(params.NAMESPACE) -f - <<EOF
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: $(params.DEPLOYMENT_NAME)
+          labels:
+            app: $(params.DEPLOYMENT_NAME)
+            app.kubernetes.io/name: $(params.DEPLOYMENT_NAME)
+            app.kubernetes.io/version: "$(params.IMAGE)"
+        spec:
+          replicas: $(params.REPLICAS)
+          selector:
+            matchLabels:
+              app: $(params.DEPLOYMENT_NAME)
+          template:
+            metadata:
+              labels:
+                app: $(params.DEPLOYMENT_NAME)
+            spec:
+              containers:
+                - name: $(params.DEPLOYMENT_NAME)
+                  image: $(params.IMAGE)
+                  imagePullPolicy: Always
+                  ports:
+                    - name: http
+                      containerPort: 3000
+                  readinessProbe:
+                    httpGet:
+                      path: /health
+                      port: 3000
+                    initialDelaySeconds: 5
+                    periodSeconds: 10
+                    failureThreshold: 3
+                  livenessProbe:
+                    httpGet:
+                      path: /health
+                      port: 3000
+                    initialDelaySeconds: 15
+                    periodSeconds: 20
+                    failureThreshold: 3
+                  resources:
+                    requests:
+                      cpu: 100m
+                      memory: 64Mi
+                    limits:
+                      cpu: 500m
+                      memory: 256Mi
+        ---
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: $(params.DEPLOYMENT_NAME)
+          labels:
+            app: $(params.DEPLOYMENT_NAME)
+        spec:
+          selector:
+            app: $(params.DEPLOYMENT_NAME)
+          ports:
+            - name: http
+              port: 80
+              targetPort: 3000
+          type: LoadBalancer
+        EOF
+
+        echo "==> Manifest applied. Waiting for rollout..."
+
+    - name: wait-for-rollout
+      image: $(params.KUBECTL_IMAGE)
+      script: |
+        #!/bin/sh
+        set -eu
+        echo "==> Monitoring rollout status..."
+        kubectl rollout status deployment/$(params.DEPLOYMENT_NAME) \
+          -n $(params.NAMESPACE) \
+          --timeout=$(params.ROLLOUT_TIMEOUT)
+        echo "==> Rollout complete."
+
+    - name: verify-deployment
+      image: $(params.KUBECTL_IMAGE)
+      script: |
+        #!/bin/sh
+        set -eu
+        echo "==> Verifying deployment..."
+        kubectl get deployment $(params.DEPLOYMENT_NAME) -n $(params.NAMESPACE)
+        echo "==> Verifying pods..."
+        kubectl get pods -n $(params.NAMESPACE) -l app=$(params.DEPLOYMENT_NAME)
+        echo "==> Verifying service..."
+        kubectl get service $(params.DEPLOYMENT_NAME) -n $(params.NAMESPACE)
+        echo "==> Deployment verified successfully."

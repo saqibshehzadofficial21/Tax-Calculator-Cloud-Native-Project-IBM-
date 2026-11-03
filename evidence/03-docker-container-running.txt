@@ -1,0 +1,38 @@
+==============================================================
+  EVIDENCE: Docker Container Running
+==============================================================
+Project : Cloud-Native Tax Calculator
+Date    : 2026-11-03
+==============================================================
+
+COMMAND: docker run -d --name tax-calculator -p 3000:3000 tax-calculator:latest
+RESULT : Container started — ID: be0b4cefcc6f
+
+COMMAND: docker ps --filter "name=tax-calculator"
+OUTPUT :
+CONTAINER ID   IMAGE                   COMMAND                  CREATED         STATUS                   PORTS                                         NAMES
+be0b4cefcc6f   tax-calculator:latest   "docker-entrypoint.s…"   Up 11 seconds   Up 11 seconds (healthy)   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp   tax-calculator
+
+COMMAND: docker logs tax-calculator
+OUTPUT :
+> cloud-native-tax-calculator@1.0.0 start
+> node src/server.js
+Tax Calculator listening on http://0.0.0.0:3000
+
+COMMAND: GET http://localhost:3000/health
+OUTPUT :
+{"status":"ok","service":"tax-calculator","version":"1.0.0","uptime":14}
+
+COMMAND: POST http://localhost:3000/api/tax/calculate {"annualIncome":1400000}
+OUTPUT :
+{
+  "annualIncome": 1400000,
+  "annualTax": 60000,
+  "monthlyTax": 5000,
+  "annualTakeHome": 1340000,
+  "effectiveRate": 4.29
+}
+
+==============================================================
+  Container is running and healthy. API responds correctly.
+==============================================================

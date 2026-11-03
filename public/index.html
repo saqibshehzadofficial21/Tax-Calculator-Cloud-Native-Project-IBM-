@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TaxCalc Pro | Cloud-Native Tax Calculator</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+
+  <!-- NAVIGATION -->
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand" aria-label="TaxCalc Pro home">
+        <span class="nav-logo" aria-hidden="true">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="32" height="32" rx="8" fill="#1769aa" />
+            <path d="M8 10h16M8 16h10M8 22h12" stroke="white" stroke-width="2.5" stroke-linecap="round" />
+            <circle cx="23" cy="22" r="4" fill="#4fc3f7" />
+            <path d="M21.5 22h3M23 20.5v3" stroke="#1769aa" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
+        </span>
+        <span class="nav-brand-text">TaxCalc <strong>Pro</strong></span>
+      </a>
+      <div class="nav-meta">
+        <span class="nav-badge">Cloud Native</span>
+        <a href="/health" class="nav-health-link" id="health-indicator" aria-label="API health status">
+          <span class="health-dot" aria-hidden="true"></span>
+          <span class="health-label">API</span>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-inner">
+      <div class="hero-tag" aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="7" stroke="#1769aa" stroke-width="1.5" />
+          <path d="M8 5v3l2 2" stroke="#1769aa" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+        Illustrative Tax Brackets · Not Official Tax Advice
+      </div>
+      <h1 id="hero-title">Income Tax <span class="hero-accent">Calculator</span></h1>
+      <p class="hero-sub">Instantly estimate your annual &amp; monthly tax liability, take-home income, and effective
+        tax rate based on progressive brackets.</p>
+    </div>
+  </section>
+
+  <!-- MAIN LAYOUT -->
+  <main class="layout" id="main-content">
+
+    <!-- CALCULATOR PANEL -->
+    <div class="calculator-panel">
+      <div class="panel-header">
+        <h2 class="panel-title">
+          <svg class="panel-icon" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <rect x="2" y="2" width="16" height="16" rx="3" stroke="#1769aa" stroke-width="1.5" />
+            <path d="M6 6h8M6 10h5M6 14h6" stroke="#1769aa" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
+          Tax Estimate
+        </h2>
+        <p class="panel-sub">Enter your gross annual income below</p>
+      </div>
+
+      <form id="tax-form" novalidate aria-label="Tax calculation form">
+        <div class="field-group">
+          <label class="field-label" for="income">
+            Annual Gross Income
+            <span class="field-required" aria-hidden="true">*</span>
+          </label>
+          <div class="field-input-wrap">
+            <span class="field-prefix" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M8 2v12M5 4.5C5 3.67 6.34 3 8 3s3 .67 3 1.5S9.66 6 8 6s-3 .67-3 1.5S6.34 9 8 9s3 .67 3 1.5S9.66 12 8 12s-3-.67-3-1.5"
+                  stroke="#64748b" stroke-width="1.5" stroke-linecap="round" />
+              </svg>
+            </span>
+            <input id="income" name="income" type="number" inputmode="numeric" min="0" max="999999999" step="1"
+              placeholder="e.g. 1 800 000" autocomplete="off" aria-describedby="income-hint income-error"
+              aria-required="true" class="field-input">
+          </div>
+          <span id="income-hint" class="field-hint">Enter your annual gross income (before tax). Amounts are in your
+            local currency.</span>
+          <span id="income-error" class="field-error" role="alert" aria-live="assertive"></span>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" id="btn-calculate" aria-label="Calculate tax">
+            <span class="btn-text">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M3 8h10M9 4l4 4-4 4" stroke="white" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+              Calculate Tax
+            </span>
+            <span class="btn-loading" aria-hidden="true" hidden>
+              <span class="spinner"></span> Calculating…
+            </span>
+          </button>
+          <button type="button" class="btn-secondary" id="btn-reset" aria-label="Reset calculator" hidden>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M1.5 7a5.5 5.5 0 1 0 1-3.12M1.5 2v3h3" stroke="currentColor" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            Reset
+          </button>
+        </div>
+      </form>
+
+      <!-- ERROR BANNER -->
+      <div id="global-error" class="error-banner" role="alert" aria-live="assertive" hidden>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <circle cx="8" cy="8" r="7" stroke="#b42318" stroke-width="1.5" />
+          <path d="M8 5v3M8 11h.01" stroke="#b42318" stroke-width="1.5" stroke-linecap="round" />
+        </svg>
+        <span id="global-error-text"></span>
+      </div>
+    </div>
+
+    <!-- RESULTS PANEL -->
+    <div id="results-panel" class="results-panel" aria-live="polite" hidden>
+
+      <div class="results-header">
+        <h2 class="results-title">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+            <path d="M9 2a7 7 0 1 1 0 14A7 7 0 0 1 9 2zm0 4v4l3 1.5" stroke="#1769aa" stroke-width="1.5"
+              stroke-linecap="round" />
+          </svg>
+          Your Tax Summary
+        </h2>
+        <span id="results-income-label" class="results-income-label"></span>
+      </div>
+
+      <!-- KPI CARDS ROW -->
+      <div class="kpi-grid" role="list">
+        <div class="kpi-card kpi-tax" role="listitem">
+          <div class="kpi-icon kpi-icon-tax" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M4 16V8l6-5 6 5v8" stroke="#1769aa" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round" />
+              <rect x="7" y="12" width="6" height="4" rx="1" stroke="#1769aa" stroke-width="1.5" />
+            </svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-label">Annual Tax</span>
+            <strong class="kpi-value" id="annual-tax">—</strong>
+          </div>
+        </div>
+        <div class="kpi-card kpi-monthly" role="listitem">
+          <div class="kpi-icon kpi-icon-monthly" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <rect x="3" y="5" width="14" height="12" rx="2" stroke="#0e7490" stroke-width="1.5" />
+              <path d="M3 9h14M7 3v4M13 3v4" stroke="#0e7490" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-label">Monthly Tax</span>
+            <strong class="kpi-value" id="monthly-tax">—</strong>
+          </div>
+        </div>
+        <div class="kpi-card kpi-takehome" role="listitem">
+          <div class="kpi-icon kpi-icon-takehome" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M10 3v14M6 7l4-4 4 4" stroke="#047857" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round" />
+              <path d="M4 17h12" stroke="#047857" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-label">Annual Take-Home</span>
+            <strong class="kpi-value" id="take-home">—</strong>
+          </div>
+        </div>
+        <div class="kpi-card kpi-rate" role="listitem">
+          <div class="kpi-icon kpi-icon-rate" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="10" r="7" stroke="#7c3aed" stroke-width="1.5" />
+              <path d="M7 13l6-6M7.5 8a.5.5 0 1 1 1 0 .5.5 0 0 1-1 0zm4 4a.5.5 0 1 1 1 0 .5.5 0 0 1-1 0z"
+                stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+          </div>
+          <div class="kpi-body">
+            <span class="kpi-label">Effective Rate</span>
+            <strong class="kpi-value" id="effective-rate">—</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAX BREAKDOWN TABLE -->
+      <div class="breakdown-section" aria-labelledby="breakdown-title">
+        <h3 id="breakdown-title" class="breakdown-title">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M2 4h12M2 8h8M2 12h10" stroke="#1769aa" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
+          Tax Bracket Breakdown
+        </h3>
+        <div class="breakdown-table-wrap" role="region" aria-label="Tax bracket breakdown">
+          <table class="breakdown-table" aria-label="Progressive tax bracket calculation">
+            <thead>
+              <tr>
+                <th scope="col">Bracket</th>
+                <th scope="col">Taxable Amount</th>
+                <th scope="col">Rate</th>
+                <th scope="col">Tax Due</th>
+              </tr>
+            </thead>
+            <tbody id="breakdown-body">
+              <!-- Populated by JavaScript -->
+            </tbody>
+            <tfoot>
+              <tr class="breakdown-total">
+                <td colspan="3"><strong>Total Annual Tax</strong></td>
+                <td><strong id="breakdown-total">—</strong></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <!-- INCOME DISTRIBUTION BAR -->
+      <div class="distribution-section" aria-labelledby="dist-title">
+        <h3 id="dist-title" class="breakdown-title">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <rect x="1" y="11" width="3" height="4" rx="1" fill="#1769aa" />
+            <rect x="6" y="7" width="3" height="8" rx="1" fill="#4fc3f7" />
+            <rect x="11" y="4" width="3" height="11" rx="1" fill="#047857" />
+          </svg>
+          Income Distribution
+        </h3>
+        <div class="dist-bar-wrap" aria-hidden="true">
+          <div class="dist-bar" id="dist-bar">
+            <div class="dist-segment dist-tax" id="dist-tax-seg" style="width:0%"></div>
+            <div class="dist-segment dist-takehome" id="dist-takehome-seg" style="width:100%"></div>
+          </div>
+        </div>
+        <div class="dist-legend" aria-hidden="true">
+          <span class="dist-legend-item"><span class="dist-dot dist-dot-tax"></span> Tax paid</span>
+          <span class="dist-legend-item"><span class="dist-dot dist-dot-takehome"></span> Take-home</span>
+        </div>
+      </div>
+
+    </div><!-- /#results-panel -->
+
+    <!-- DISCLAIMER NOTE -->
+    <div class="disclaimer" role="note">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <circle cx="7" cy="7" r="6" stroke="#92400e" stroke-width="1.3" />
+        <path d="M7 4.5v3M7 9.5h.01" stroke="#92400e" stroke-width="1.3" stroke-linecap="round" />
+      </svg>
+      <span><strong>Important:</strong> The tax brackets used are <strong>illustrative test data only</strong> and are
+        not official tax rates. This tool does not constitute financial or tax advice. Consult a qualified tax
+        professional for official guidance.</span>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <span class="footer-logo" aria-hidden="true">TaxCalc <strong>Pro</strong></span>
+        <span class="footer-sep" aria-hidden="true">·</span>
+        <span class="footer-course">Introduction to Cloud Native — Final Project</span>
+      </div>
+      <div class="footer-right">
+        <a href="/health" class="footer-link">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.2" />
+            <path d="M2 6h2l1.5-2.5L7 8.5 8.5 6H10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
+          Health
+        </a>
+        <a href="/api" class="footer-link">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <rect x="1" y="1" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.2" />
+            <path d="M4 4l4 4M8 4l-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+          </svg>
+          API
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+
+</html>

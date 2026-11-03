@@ -1,0 +1,41 @@
+---
+# Service Account for Tekton Pipeline runs
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tekton-pipeline-sa
+  labels:
+    app.kubernetes.io/name: tax-calculator
+    app.kubernetes.io/component: ci-cd
+---
+# Role granting the pipeline permission to manage Deployments and Services
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: tekton-deployer-role
+  labels:
+    app.kubernetes.io/name: tax-calculator
+    app.kubernetes.io/component: ci-cd
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+  - apiGroups: [""]
+    resources: ["services", "pods"]
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+---
+# Bind the Role to the pipeline Service Account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-deployer-rolebinding
+  labels:
+    app.kubernetes.io/name: tax-calculator
+    app.kubernetes.io/component: ci-cd
+subjects:
+  - kind: ServiceAccount
+    name: tekton-pipeline-sa
+roleRef:
+  kind: Role
+  name: tekton-deployer-role
+  apiGroup: rbac.authorization.k8s.io

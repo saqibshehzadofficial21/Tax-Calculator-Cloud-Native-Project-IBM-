@@ -1,0 +1,56 @@
+==============================================================
+  EVIDENCE: IBM Cloud Container Registry
+==============================================================
+Project : Cloud-Native Tax Calculator
+Date    : 2026-11-03
+Status  : PENDING — IBM Cloud CLI not installed on this machine
+==============================================================
+
+STEPS TO COMPLETE:
+
+1. Install IBM Cloud CLI:
+   https://cloud.ibm.com/docs/cli?topic=cli-install-ibmcloud-cli
+
+2. Authenticate:
+   ibmcloud login --sso
+   ibmcloud target -r us-south
+
+3. Install / verify Container Registry plugin:
+   ibmcloud plugin install container-registry -f
+   ibmcloud cr region-set us-south
+
+4. List or create namespace:
+   ibmcloud cr namespace-list
+   # ibmcloud cr namespace-add YOUR_NAMESPACE   (if namespace does not exist)
+
+5. Authenticate Docker with IBM registry:
+   ibmcloud cr login
+
+6. Tag the local image (replace YOUR_NAMESPACE with actual namespace):
+   docker tag tax-calculator:latest us.icr.io/YOUR_NAMESPACE/tax-calculator:v1
+
+7. Push image:
+   docker push us.icr.io/YOUR_NAMESPACE/tax-calculator:v1
+
+8. Verify:
+   ibmcloud cr images --restrict YOUR_NAMESPACE
+
+==============================================================
+  NOTE: Replace us.icr.io and YOUR_NAMESPACE with the actual
+  IBM Cloud registry hostname and namespace for your account.
+  Never store API keys or passwords in this file.
+==============================================================
+
+LOCAL IMAGE READY FOR TAGGING AND PUSH:
+  tax-calculator:latest   (0403cbfa55d1, 199MB)
+
+KUBERNETES MANIFEST:
+  k8s/deployment.yaml — update IMAGE_PLACEHOLDER with:
+  us.icr.io/YOUR_NAMESPACE/tax-calculator:v1
+
+ONCE PUSH COMPLETES, UPDATE THIS FILE with:
+  - ibmcloud cr images output
+  - Image digest
+  - Namespace used
+  - Region targeted
+==============================================================

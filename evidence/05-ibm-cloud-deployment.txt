@@ -1,0 +1,62 @@
+==============================================================
+  EVIDENCE: IBM Cloud Kubernetes Deployment
+==============================================================
+Project : Cloud-Native Tax Calculator
+Date    : 2026-11-03
+Status  : PENDING — Requires IBM Cloud IKS cluster access
+==============================================================
+
+PREREQUISITES:
+  - IBM Cloud CLI installed and authenticated
+  - IKS (IBM Kubernetes Service) cluster provisioned
+  - kubectl configured for target cluster
+  - Image pushed to IBM Container Registry (evidence/04)
+
+STEPS TO COMPLETE:
+
+1. Retrieve cluster kubeconfig (from IBM Cloud Console):
+   ibmcloud ks cluster config --cluster YOUR_CLUSTER_NAME
+
+2. Verify cluster connectivity:
+   kubectl config current-context
+   kubectl get nodes
+
+3. Deploy application (replace IMAGE with actual registry path):
+   export IMAGE=us.icr.io/YOUR_NAMESPACE/tax-calculator:v1
+   sed "s|IMAGE_PLACEHOLDER|$IMAGE|g" k8s/deployment.yaml | kubectl apply -f -
+
+4. Monitor rollout:
+   kubectl rollout status deployment/tax-calculator
+
+5. Verify pods and services:
+   kubectl get deployments,pods,services
+
+6. Get external endpoint:
+   kubectl get service tax-calculator --watch
+
+7. Test the deployment:
+   curl http://EXTERNAL_IP/health
+   curl -X POST http://EXTERNAL_IP/api/tax/calculate \
+     -H "Content-Type: application/json" \
+     -d '{"annualIncome":1400000}'
+
+==============================================================
+  EXPECTED RESULTS:
+  - Deployment: 2 replicas, READY 2/2
+  - All pods: Running, READY 1/1
+  - Health endpoint: {"status":"ok","service":"tax-calculator"}
+  - Service: LoadBalancer with EXTERNAL-IP assigned
+==============================================================
+
+KUBERNETES MANIFESTS PREPARED:
+  k8s/deployment.yaml
+  - Deployment: 2 replicas, resource limits set
+  - Readiness probe: GET /health (port 3000)
+  - Liveness probe:  GET /health (port 3000)
+  - Service: LoadBalancer, port 80 -> 3000
+  - IMAGE_PLACEHOLDER: replace with actual IBM registry path
+
+NOTE: Cloud resources may incur charges. Delete the deployment
+after assessment using:
+  kubectl delete -f k8s/deployment.yaml
+==============================================================

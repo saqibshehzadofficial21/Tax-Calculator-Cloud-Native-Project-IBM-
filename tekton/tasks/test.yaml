@@ -1,0 +1,41 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: tax-calculator-test
+  labels:
+    app.kubernetes.io/name: tax-calculator
+    app.kubernetes.io/component: ci
+  annotations:
+    description: >
+      Installs Node.js dependencies and runs Jasmine unit tests.
+      The task fails if any test spec fails.
+spec:
+  description: Run Jasmine unit tests for the Cloud-Native Tax Calculator.
+  workspaces:
+    - name: source
+      description: The workspace containing the application source code.
+  params:
+    - name: node-image
+      type: string
+      default: node:20-alpine
+      description: Node.js container image to use for running tests.
+  steps:
+    - name: install-dependencies
+      image: $(params.node-image)
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/sh
+        set -eu
+        echo "==> Installing dependencies..."
+        npm ci --include=dev
+        echo "==> Dependencies installed successfully."
+
+    - name: run-tests
+      image: $(params.node-image)
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/sh
+        set -eu
+        echo "==> Running Jasmine unit tests..."
+        npm run test:ci
+        echo "==> All tests passed."
