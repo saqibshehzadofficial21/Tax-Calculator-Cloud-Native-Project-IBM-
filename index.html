@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TaxCalc Pro | Cloud-Native Tax Calculator</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <nav class="navbar" role="navigation" aria-label="Main navigation">
+    <a href="/" class="nav-brand" aria-label="TaxCalc Pro home">
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <rect width="32" height="32" rx="8" fill="#1769aa"/>
+        <path d="M8 10h16M8 16h10M8 22h12" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="23" cy="22" r="4" fill="#4fc3f7"/>
+        <path d="M21.5 22h3M23 20.5v3" stroke="#1769aa" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      TaxCalc <strong>Pro</strong>
+    </a>
+    <span class="nav-badge">Cloud Native · Nginx</span>
+  </nav>
+
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-inner">
+      <div class="hero-tag">Illustrative Brackets · Not Official Tax Advice</div>
+      <h1 id="hero-title">Income Tax <span>Calculator</span></h1>
+      <p>Estimate your annual &amp; monthly tax, take-home income, and effective tax rate using progressive brackets.</p>
+    </div>
+  </section>
+
+  <main class="layout" id="main-content">
+
+    <!-- Calculator card -->
+    <div class="panel">
+      <div class="panel-title">Tax Estimate</div>
+      <div class="panel-sub">Enter your gross annual income to calculate your tax liability.</div>
+
+      <form id="tax-form" novalidate aria-label="Tax calculation form">
+        <label class="field-label" for="income">
+          Annual Gross Income <span class="req" aria-hidden="true">*</span>
+        </label>
+        <div class="field-wrap">
+          <span class="field-prefix" aria-hidden="true">$</span>
+          <input
+            id="income"
+            name="income"
+            type="number"
+            inputmode="numeric"
+            min="0"
+            max="999999999"
+            step="1"
+            placeholder="e.g. 1800000"
+            autocomplete="off"
+            class="field-input"
+            aria-required="true"
+            aria-describedby="income-hint income-error"
+          >
+        </div>
+        <span id="income-hint" class="field-hint">Enter your gross annual income before tax, in your local currency.</span>
+        <span id="error-msg" class="error-msg" role="alert" aria-live="assertive" hidden></span>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" id="btn-calculate">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+              <path d="M2 7.5h11M9 3.5l4 4-4 4" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Calculate Tax
+          </button>
+          <button type="button" class="btn-secondary" id="btn-reset" hidden>
+            ↺ Reset
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Results card -->
+    <div class="panel" id="results" hidden>
+      <div class="results-header">
+        <div class="results-title">Your Tax Summary</div>
+        <span class="income-badge">Income: <strong id="res-income">—</strong></span>
+      </div>
+
+      <!-- KPI cards -->
+      <div class="kpi-grid" role="list">
+        <div class="kpi kpi-tax" role="listitem">
+          <span class="kpi-label">Annual Tax</span>
+          <span class="kpi-value" id="res-annual-tax">—</span>
+        </div>
+        <div class="kpi kpi-monthly" role="listitem">
+          <span class="kpi-label">Monthly Tax</span>
+          <span class="kpi-value" id="res-monthly-tax">—</span>
+        </div>
+        <div class="kpi kpi-home" role="listitem">
+          <span class="kpi-label">Annual Take-Home</span>
+          <span class="kpi-value" id="res-take-home">—</span>
+        </div>
+        <div class="kpi kpi-rate" role="listitem">
+          <span class="kpi-label">Effective Rate</span>
+          <span class="kpi-value" id="res-effective">—</span>
+        </div>
+      </div>
+
+      <!-- Bracket breakdown -->
+      <div class="section-title">Tax Bracket Breakdown</div>
+      <div class="table-wrap" role="region" aria-label="Tax bracket breakdown">
+        <table aria-label="Progressive bracket calculation">
+          <thead>
+            <tr>
+              <th scope="col">Bracket</th>
+              <th scope="col" class="num">Taxable Amount</th>
+              <th scope="col" class="num">Rate</th>
+              <th scope="col" class="num">Tax Due</th>
+            </tr>
+          </thead>
+          <tbody id="breakdown-body"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3"><strong>Total Annual Tax</strong></td>
+              <td class="num"><strong id="breakdown-total">—</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- Distribution bar -->
+      <div class="section-title">Income Distribution</div>
+      <div class="dist-bar-wrap" aria-hidden="true">
+        <div class="dist-bar">
+          <div class="seg-tax"  id="bar-tax"  style="width:0%"></div>
+          <div class="seg-home" id="bar-home" style="width:100%"></div>
+        </div>
+      </div>
+      <div class="dist-legend" aria-hidden="true">
+        <span class="legend-item"><span class="dot dot-tax"></span> Tax paid</span>
+        <span class="legend-item"><span class="dot dot-home"></span> Take-home</span>
+      </div>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="disclaimer" role="note">
+      ⚠ <span><strong>Note:</strong> The brackets shown are <strong>illustrative test data only</strong> and do not represent official tax rates. This tool is not financial or tax advice.</span>
+    </div>
+
+  </main>
+
+  <footer role="contentinfo">
+    <span class="footer-brand">TaxCalc <strong>Pro</strong></span>
+    <span>Introduction to Cloud Native · Final Project · IBM Skills Network</span>
+  </footer>
+
+  <script src="/taxCalculator.js"></script>
+  <script src="/script.js"></script>
+</body>
+</html>

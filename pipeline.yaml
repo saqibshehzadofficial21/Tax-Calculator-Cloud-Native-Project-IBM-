@@ -1,0 +1,68 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: tax-calculator-pipeline
+  namespace: default
+spec:
+  description: Pipeline to install dependencies, run Jasmine tests, and build the Tax Calculator image
+  workspaces:
+    - name: source
+  params:
+    - name: image-name
+      description: The name and tag for the container image to build
+      default: tax-calculator:latest
+  tasks:
+    - name: npminstall
+      taskRef:
+        name: npm-install-task
+      workspaces:
+        - name: source
+          workspace: source
+
+    - name: tests
+      taskRef:
+        name: jasmine-test-task
+      workspaces:
+        - name: source
+          workspace: source
+      runAfter:
+        - npminstall
+
+    - name: build
+      taskRef:
+        name: buildah-build-task
+      workspaces:
+        - name: source
+          workspace: source
+      params:
+        - name: image-name
+          value: $(params.image-name)
+      runAfter:
+        - tests
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: buildah-build-task
+  namespace: default
+spec:
+  description: Task to build the Docker image using buildah
+  params:
+    - name: image-name
+      description: The name and tag of the image to build
+      default: tax-calculator:latest
+  workspaces:
+    - name: source
+  steps:
+    - name: build-image
+      image: quay.io/buildah/stable
+      workingDir: /workspace/source
+      securityContext:
+        privileged: true
+      script: |
+        #!/bin/bash
+        set -eu
+        echo "==> Building image: $(params.image-name)"
+        buildah bud -t $(params.image-name) .
+        echo "==> Image build complete."

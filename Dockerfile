@@ -1,12 +1,7 @@
-FROM node:20-alpine
-ENV NODE_ENV=production PORT=3000
-WORKDIR /app
-COPY package*.json ./
-RUN npm install --omit=dev && npm cache clean --force
-COPY src ./src
-COPY public ./public
-USER node
-EXPOSE 3000
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-CMD ["npm", "start"]
+FROM nginx
+
+COPY favicon.ico /usr/share/nginx/html/favicon.ico
+COPY index.html /usr/share/nginx/html/index.html
+COPY script.js /usr/share/nginx/html/script.js
+COPY style.css /usr/share/nginx/html/style.css
+COPY taxCalculator.js /usr/share/nginx/html/taxCalculator.js

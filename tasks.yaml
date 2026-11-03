@@ -1,0 +1,41 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: npm-install-task
+  namespace: default
+spec:
+  description: Task to install npm dependencies
+  workspaces:
+    - name: source
+  steps:
+    - name: install-dependencies
+      image: node:20-alpine
+      workingDir: /workspace/source
+      script: |
+        #!/bin/sh
+        set -eu
+        echo "==> Installing npm dependencies..."
+        npm install
+        echo "==> npm install complete."
+---
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: jasmine-test-task
+  namespace: default
+spec:
+  description: Task to run Jasmine unit tests
+  workspaces:
+    - name: source
+  steps:
+    - name: run-tests
+      image: node:20-alpine
+      workingDir: /workspace/source
+      script: |
+        #!/bin/sh
+        set -eu
+        echo "==> Running Jasmine unit tests..."
+        npm install
+        npm test
+        echo "==> All tests passed."
